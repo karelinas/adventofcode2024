@@ -5,10 +5,12 @@ from sys import stdin
 LocationList = list[tuple[int, int]]
 
 
-def main():
-    unsorted_pairs: LocationList = [
-        tuple(map(int, line.strip().split())) for line in stdin if line
-    ]
+def main() -> None:
+    def parse_line(line: str) -> tuple[int, int]:
+        a, b, *_ = tuple(map(int, line.strip().split()))
+        return a, b
+
+    unsorted_pairs: LocationList = [parse_line(line) for line in stdin if line]
     sorted_pairs: LocationList = [
         (left, right)
         for left, right in zip(

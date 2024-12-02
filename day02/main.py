@@ -3,7 +3,7 @@ from sys import stdin
 Report = list[int]
 
 
-def main():
+def main() -> None:
     reports: list[Report] = [
         [int(c) for c in line.strip().split()] for line in stdin if line
     ]
