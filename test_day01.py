@@ -13,10 +13,10 @@ EXAMPLE_INPUT: str = """
 
 
 class Day01TestCase(unittest.TestCase):
-    def test_calibration_value_example_part1(self):
+    def test_example_data(self):
         pairs = parse_pairs(EXAMPLE_INPUT)
-        self.assertEqual(total_distance(pairs), 11)
 
-    def test_calibration_value_example_part2(self):
-        pairs = parse_pairs(EXAMPLE_INPUT)
-        self.assertEqual(similarity_score(pairs), 31)
+        with self.subTest("Part 1"):
+            self.assertEqual(total_distance(pairs), 11)
+        with self.subTest("Part 2"):
+            self.assertEqual(similarity_score(pairs), 31)

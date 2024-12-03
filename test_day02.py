@@ -13,10 +13,9 @@ EXAMPLE_INPUT: str = """
 
 
 class Day02TestCase(unittest.TestCase):
-    def test_calibration_value_example_part1(self):
+    def test_example_data(self):
         reports = parse_reports(EXAMPLE_INPUT)
-        self.assertEqual(safe_count(reports), 2)
-
-    def test_calibration_value_example_part2(self):
-        reports = parse_reports(EXAMPLE_INPUT)
-        self.assertEqual(safe_count_with_tolerance(reports), 4)
+        with self.subTest("Part 1"):
+            self.assertEqual(safe_count(reports), 2)
+        with self.subTest("Part 2"):
+            self.assertEqual(safe_count_with_tolerance(reports), 4)
