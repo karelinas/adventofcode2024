@@ -37,12 +37,7 @@ def manual_updates_from_string(s: str) -> list[ManualUpdate]:
 
     # build updatelist
     return [
-        list(
-            map(
-                lambda x: CustomOrderedItem(orderlist[int(x)], int(x)),
-                line.strip().split(","),
-            )
-        )
+        [CustomOrderedItem(orderlist[int(n)], int(n)) for n in line.strip().split(",")]
         for line in updatestring.split("\n")
         if line
     ]
