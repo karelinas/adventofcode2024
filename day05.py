@@ -1,10 +1,13 @@
 from collections import defaultdict
 from sys import stdin
 
+ManualUpdate = list["CustomOrderedItem"]
+
 
 def main() -> None:
-    updates = manual_updates_from_string(stdin.read())
+    updates: list[ManualUpdate] = manual_updates_from_string(stdin.read())
     print("Part 1:", sum_of_correct_updates(updates))
+    print("Part 2:", sum_of_incorrect_updates(updates))
 
 
 class CustomOrderedItem:
@@ -15,8 +18,10 @@ class CustomOrderedItem:
     def __lt__(self, other: "CustomOrderedItem") -> bool:
         return other.value in self.lt_list
 
-
-ManualUpdate = list[CustomOrderedItem]
+    def __eq__(self, other: object) -> bool:
+        if not isinstance(other, CustomOrderedItem):
+            return NotImplemented
+        return self.value == other.value
 
 
 def manual_updates_from_string(s: str) -> list[ManualUpdate]:
@@ -30,7 +35,8 @@ def manual_updates_from_string(s: str) -> list[ManualUpdate]:
         a, b, *_ = line.strip().split("|")
         orderlist[int(a)].add(int(b))
 
-    updatelist: list[ManualUpdate] = [
+    # build updatelist
+    return [
         list(
             map(
                 lambda x: CustomOrderedItem(orderlist[int(x)], int(x)),
@@ -40,20 +46,24 @@ def manual_updates_from_string(s: str) -> list[ManualUpdate]:
         for line in updatestring.split("\n")
         if line
     ]
-    return updatelist
 
 
 def sum_of_correct_updates(updates: list[ManualUpdate]) -> int:
-    def lists_equal(lhs: list[CustomOrderedItem], rhs: list[CustomOrderedItem]) -> bool:
-        return len(lhs) == len(rhs) and all(
-            a.value == b.value for a, b in zip(lhs, rhs)
-        )
-
     total: int = 0
     for u in updates:
         sorted_u = sorted(u)
-        if lists_equal(u, sorted_u):
+        if u == sorted_u:
             total += u[len(u) // 2].value
+
+    return total
+
+
+def sum_of_incorrect_updates(updates: list[ManualUpdate]) -> int:
+    total: int = 0
+    for u in updates:
+        sorted_u = sorted(u)
+        if u != sorted_u:
+            total += sorted_u[len(sorted_u) // 2].value
 
     return total
 

@@ -1,6 +1,10 @@
 import unittest
 
-from day05 import manual_updates_from_string, sum_of_correct_updates
+from day05 import (
+    manual_updates_from_string,
+    sum_of_correct_updates,
+    sum_of_incorrect_updates,
+)
 
 EXAMPLE_UPDATES = """
 47|53
@@ -39,3 +43,5 @@ class Day05TestCase(unittest.TestCase):
         updates = manual_updates_from_string(EXAMPLE_UPDATES)
         with self.subTest("Part 1"):
             self.assertEqual(sum_of_correct_updates(updates), 143)
+        with self.subTest("Part 2"):
+            self.assertEqual(sum_of_incorrect_updates(updates), 123)
