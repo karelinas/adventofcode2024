@@ -24,6 +24,9 @@ class Point:
     def reverse(self) -> "Point":
         return Point(-self.x, -self.y)
 
+    def rotate_right(self) -> "Point":
+        return Point(-self.y, self.x)
+
     @staticmethod
     def north() -> "Point":
         return Point(0, -1)
