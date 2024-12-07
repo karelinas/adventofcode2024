@@ -1,6 +1,6 @@
 import operator
 from sys import stdin
-from typing import Callable, Optional
+from typing import Callable
 
 Equation = tuple[int, list[int]]
 Operator = Callable[[int, int], int]
@@ -36,26 +36,22 @@ def sum_of_true_equations(
     return sum(
         target_value
         for target_value, numbers in equations
-        if check_equation(numbers, target_value, operators)
+        if check_equation(target_value, numbers[0], numbers[1:], operators)
     )
 
 
 def check_equation(
-    numbers: list[int],
     target_value: int,
+    intermediate_result: int,
+    numbers: list[int],
     operators: list[Operator],
-    intermediate_result: Optional[int] = None,
 ) -> bool:
     if not numbers:
         return target_value == intermediate_result
 
-    if intermediate_result is None:
-        intermediate_result = numbers[0]
-        numbers = numbers[1:]
-
     return any(
         check_equation(
-            numbers[1:], target_value, operators, op(intermediate_result, numbers[0])
+            target_value, op(intermediate_result, numbers[0]), numbers[1:], operators
         )
         for op in operators
     )
