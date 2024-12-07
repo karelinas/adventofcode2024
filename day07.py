@@ -31,7 +31,7 @@ def sum_of_true_equations(
 ) -> int:
     operators: list[Operator] = [operator.add, operator.mul]
     if enable_concat:
-        operators.append(concatenation)
+        operators.append(concat_int)
 
     return sum(
         target_value
@@ -57,7 +57,7 @@ def check_equation(
     )
 
 
-def concatenation(a: int, b: int) -> int:
+def concat_int(a: int, b: int) -> int:
     return int(str(a) + str(b))
 
 
