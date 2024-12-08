@@ -1,6 +1,6 @@
 import unittest
 
-from day08 import count_antinodes, parse_grid
+from day08 import count_antinodes, count_antinodes_harmonic, parse_grid
 
 EXAMPLE_ANTENNAS = """
 ............
@@ -23,3 +23,5 @@ class Day08TestCase(unittest.TestCase):
         grid = parse_grid(EXAMPLE_ANTENNAS)
         with self.subTest("Part 1"):
             self.assertEqual(count_antinodes(grid), 14)
+        with self.subTest("Part 2"):
+            self.assertEqual(count_antinodes_harmonic(grid), 34)
