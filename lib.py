@@ -96,3 +96,9 @@ def manhattan_distance(p1: Point, p2: Point) -> int:
 
 def transpose(lst: Iterable[Iterable[T]]) -> list[tuple[T, ...]]:
     return list(zip(*lst))
+
+
+def each_twice(lst: Iterable[T]) -> Iterable[T]:
+    for item in lst:
+        yield item
+        yield item
