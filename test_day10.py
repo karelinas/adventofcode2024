@@ -1,6 +1,6 @@
 import unittest
 
-from day10 import Grid, count_trailheads
+from day10 import Grid, count_distinct_trailheads, sum_trail_ratings
 
 EXAMPLE_GRID = """
 89010123
@@ -18,4 +18,6 @@ class Day08TestCase(unittest.TestCase):
     def test_example_data(self):
         grid = Grid.from_string(EXAMPLE_GRID)
         with self.subTest("Part 1"):
-            self.assertEqual(count_trailheads(grid), 36)
+            self.assertEqual(count_distinct_trailheads(grid), 36)
+        with self.subTest("Part 2"):
+            self.assertEqual(sum_trail_ratings(grid), 81)

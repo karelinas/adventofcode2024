@@ -6,7 +6,8 @@ from lib import Point, orthogonal_neighborhood
 
 def main() -> None:
     grid = Grid.from_string(stdin.read())
-    print("Part 1:", count_trailheads(grid))
+    print("Part 1:", count_distinct_trailheads(grid))
+    print("Part 2:", sum_trail_ratings(grid))
 
 
 @dataclass
@@ -31,19 +32,27 @@ class Grid:
         return Grid(grid=grid, height=height, width=width)
 
 
-def count_trailheads(grid: Grid) -> int:
+def count_distinct_trailheads(grid: Grid) -> int:
+    return sum(
+        len(set(trail_heads(grid, pos)))
+        for pos, height in grid.grid.items()
+        if height == 0
+    )
+
+
+def sum_trail_ratings(grid: Grid) -> int:
     return sum(
         len(trail_heads(grid, pos)) for pos, height in grid.grid.items() if height == 0
     )
 
 
-def trail_heads(grid: Grid, pos: Point) -> set[Point]:
+def trail_heads(grid: Grid, pos: Point) -> list[Point]:
     if grid.grid[pos] == 9:
-        return set([pos])
-    heads: set[Point] = set()
+        return [pos]
+    heads: list[Point] = []
     for new_pos in orthogonal_neighborhood(pos):
         if grid.in_bounds(new_pos) and grid.grid[new_pos] == grid.grid[pos] + 1:
-            heads.update(trail_heads(grid, new_pos))
+            heads.extend(trail_heads(grid, new_pos))
     return heads
 
 
