@@ -13,8 +13,6 @@ def main() -> None:
 @dataclass
 class Grid:
     grid: dict[Point, int]
-    height: int
-    width: int
 
     def in_bounds(self, p: Point) -> bool:
         return p in self.grid
@@ -27,9 +25,7 @@ class Grid:
             for y, line in enumerate(filtered_lines)
             for x, ch in enumerate(line.strip())
         }
-        width: int = max(p.x for p in grid.keys()) + 1
-        height: int = max(p.y for p in grid.keys()) + 1
-        return Grid(grid=grid, height=height, width=width)
+        return Grid(grid=grid)
 
 
 def count_distinct_trailheads(grid: Grid) -> int:
