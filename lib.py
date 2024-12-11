@@ -1,5 +1,5 @@
 from dataclasses import dataclass
-from typing import Iterable, TypeVar
+from typing import Callable, Iterable, TypeVar
 
 T = TypeVar("T")
 
@@ -102,3 +102,10 @@ def each_twice(lst: Iterable[T]) -> Iterable[T]:
     for item in lst:
         yield item
         yield item
+
+
+def repeat_call(fn: Callable[[T], T], arg: T, *, n) -> T:
+    rv: T = arg
+    for _ in range(n):
+        rv = fn(rv)
+    return rv
