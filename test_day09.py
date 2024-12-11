@@ -5,7 +5,7 @@ from day09 import DiskMap, checksum, checksum2
 EXAMPLE_BLOCKS = "2333133121414131402"
 
 
-class Day08TestCase(unittest.TestCase):
+class Day09TestCase(unittest.TestCase):
     def test_example_data(self):
         diskmap = DiskMap.from_string(EXAMPLE_BLOCKS)
         with self.subTest("Part 1"):

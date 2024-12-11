@@ -14,7 +14,7 @@ EXAMPLE_GRID = """
 """
 
 
-class Day08TestCase(unittest.TestCase):
+class Day10TestCase(unittest.TestCase):
     def test_example_data(self):
         grid = Grid.from_string(EXAMPLE_GRID)
         with self.subTest("Part 1"):
