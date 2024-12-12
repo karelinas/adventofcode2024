@@ -101,51 +101,58 @@ def discounted_price(grid: Grid) -> int:
     total: int = 0
 
     # count scores for each region
-    for plots in make_regions(grid):
-        min_x = min(p.x for p in plots)
-        max_x = max(p.x for p in plots)
-        min_y = min(p.y for p in plots)
-        max_y = max(p.y for p in plots)
-
+    for original_plots in make_regions(grid):
         sides_count: int = 0
-        # count vertical sides
-        for direction in [Point.east(), Point.west()]:
-            vertical_sides: list[int] = []
-            for x in range(min_x, max_x + 1):
-                vertical_sides.append(0)
-                for y in range(min_y, max_y + 1):
-                    pos = Point(x, y)
-                    neighbor = pos + direction
-                    vertical_sides.append(
-                        0 if pos not in plots or neighbor in plots else 1
-                    )
-            sides_count += sum(drop_consecutive(vertical_sides))
-        # count horizontal sides
-        for direction in [Point.north(), Point.south()]:
-            horizontal_sides: list[int] = []
-            for y in range(min_y, max_y + 1):
-                horizontal_sides.append(0)
+
+        # The total number of sides for the region is the combination of horizontal
+        # sides and vertical sides:
+        # - count vertical sides for the unmodified region
+        # - count horizontal sides by transposing the region and counting vertical sides
+        for plots in [original_plots, set(transpose_points(original_plots))]:
+            min_x = min(p.x for p in plots)
+            max_x = max(p.x for p in plots)
+            min_y = min(p.y for p in plots)
+            max_y = max(p.y for p in plots)
+
+            # count only vertical sides
+            for direction in [Point.east(), Point.west()]:
+                # keep track of sides in a list
+                # 0 => no side in this direction
+                # 1 => has a side in this direction at this position
+                vertical_sides: list[int] = []
                 for x in range(min_x, max_x + 1):
-                    pos = Point(x, y)
-                    if pos not in plots:
-                        horizontal_sides.append(0)
-                        continue
-                    neighbor = pos + direction
-                    horizontal_sides.append(
-                        0 if pos not in plots or neighbor in plots else 1
-                    )
-            sides_count += sum(drop_consecutive(horizontal_sides))
+                    # insert 0 to avoid accidentally continuing a side to the next row
+                    vertical_sides.append(0)
+                    for y in range(min_y, max_y + 1):
+                        pos = Point(x, y)
+                        neighbor = pos + direction
+                        vertical_sides.append(
+                            0 if pos not in plots or neighbor in plots else 1
+                        )
+
+                sides_count += sum(drop_consecutive(vertical_sides))
+
         total += sides_count * len(plots)
 
     return total
 
 
 def drop_consecutive(it: Iterable[int]) -> Iterable[int]:
+    """
+    Iterate over it, preserving only non-consecutive values.
+
+    For example [0, 1, 1, 1, 0, 1] would become [0, 1, 0, 1], because two consecutive
+    1s are dropped.
+    """
     prev = None
     for val in it:
         if val != prev:
             yield val
             prev = val
+
+
+def transpose_points(it: Iterable[Point]) -> Iterable[Point]:
+    return (Point(p.y, p.x) for p in it)
 
 
 if __name__ == "__main__":
