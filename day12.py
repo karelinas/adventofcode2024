@@ -101,40 +101,49 @@ def discounted_price(grid: Grid) -> int:
     total: int = 0
 
     # count scores for each region
-    for original_plots in make_regions(grid):
-        sides_count: int = 0
-
+    for region in make_regions(grid):
         # The total number of sides for the region is the combination of horizontal
-        # sides and vertical sides:
-        # - count vertical sides for the unmodified region
-        # - count horizontal sides by transposing the region and counting vertical sides
-        for plots in [original_plots, set(transpose_points(original_plots))]:
-            min_x = min(p.x for p in plots)
-            max_x = max(p.x for p in plots)
-            min_y = min(p.y for p in plots)
-            max_y = max(p.y for p in plots)
-
-            # count only vertical sides
-            for direction in [Point.east(), Point.west()]:
-                # keep track of sides in a list
-                # 0 => no side in this direction
-                # 1 => has a side in this direction at this position
-                vertical_sides: list[int] = []
-                for x in range(min_x, max_x + 1):
-                    # insert 0 to avoid accidentally continuing a side to the next row
-                    vertical_sides.append(0)
-                    for y in range(min_y, max_y + 1):
-                        pos = Point(x, y)
-                        neighbor = pos + direction
-                        vertical_sides.append(
-                            0 if pos not in plots or neighbor in plots else 1
-                        )
-
-                sides_count += sum(drop_consecutive(vertical_sides))
-
-        total += sides_count * len(plots)
+        # sides and vertical sides
+        sides_count: int = count_vertical_sides(region) + count_horizontal_sides(region)
+        total += sides_count * len(region)
 
     return total
+
+
+def count_vertical_sides(region: set[Point]) -> int:
+    """Count vertical sides for the given region"""
+    min_x = min(p.x for p in region)
+    max_x = max(p.x for p in region)
+    min_y = min(p.y for p in region)
+    max_y = max(p.y for p in region)
+
+    side_count: int = 0
+    # count only vertical sides
+    for direction in [Point.east(), Point.west()]:
+        # keep track of sides in a list
+        # 0 => no side in this direction
+        # 1 => has a side in this direction at this position
+        vertical_sides: list[int] = []
+        for x in range(min_x, max_x + 1):
+            # insert 0 to avoid accidentally continuing a side to the next row
+            vertical_sides.append(0)
+            for y in range(min_y, max_y + 1):
+                pos = Point(x, y)
+                neighbor = pos + direction
+                vertical_sides.append(
+                    0 if pos not in region or neighbor in region else 1
+                )
+        side_count += sum(drop_consecutive(vertical_sides))
+
+    return side_count
+
+
+def count_horizontal_sides(region: set[Point]) -> int:
+    """Count horizontal sides for the given region"""
+    # Count horizontal sides by transposing the region and counting vertical sides
+    # This is equivalent to just counting horizontal sides
+    transposed_region: set[Point] = set(transpose_points(region))
+    return count_vertical_sides(transposed_region)
 
 
 def drop_consecutive(it: Iterable[int]) -> Iterable[int]:
