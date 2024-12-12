@@ -13,14 +13,8 @@ def main() -> None:
 
 
 @dataclass
-class Plot:
-    plant: str
-    region_id: int
-
-
-@dataclass
 class Grid:
-    grid: dict[Point, Plot]
+    regions: list[set[Point]]
 
     @staticmethod
     def from_string(data: str) -> "Grid":
@@ -35,23 +29,18 @@ class Grid:
         }
 
         # find regions and give each a unique ID
-        regions: dict[Point, int] = dict()
+        plots: dict[Point, int] = dict()
         current_region_id: int = 0
         for loc, plant in plants.items():
-            if loc in regions:
+            if loc in plots:
                 # this region has already been mapped
                 continue
             for coord in map_region(plants, plant, loc):
-                regions[coord] = current_region_id
+                plots[coord] = current_region_id
             current_region_id += 1
 
-        # finally return the new grid with plants and regions
-        return Grid(
-            grid={
-                loc: Plot(plant=plant, region_id=regions[loc])
-                for loc, plant in plants.items()
-            }
-        )
+        # finally return the new regions
+        return Grid(regions=make_regions(plots))
 
 
 def map_region(
@@ -74,40 +63,36 @@ def map_region(
     return list(seen)
 
 
-def make_regions(grid: Grid) -> list[set[Point]]:
+def make_regions(plots: dict[Point, int]) -> list[set[Point]]:
     """Group points by region"""
     regions: dict[int, set[Point]] = defaultdict(set)
-    for pos, plot in grid.grid.items():
-        regions[plot.region_id].add(pos)
-    return list(plots for plots in regions.values())
+    for pos, region in plots.items():
+        regions[region].add(pos)
+    return list(region for region in regions.values())
 
 
 def total_price(grid: Grid) -> int:
-    total: int = 0
-    for plots in make_regions(grid):
-        region_area: int = len(plots)
-        region_perimeter: int = sum(
-            1
-            for plot in plots
-            for neighbor in orthogonal_neighborhood(plot)
-            if neighbor not in grid.grid
-            or grid.grid[neighbor].plant != grid.grid[plot].plant
-        )
-        total += region_area * region_perimeter
-    return total
+    return sum(len(region) * perimeter_length(region) for region in grid.regions)
 
 
 def discounted_price(grid: Grid) -> int:
-    total: int = 0
+    return sum(count_sides(region) * len(region) for region in grid.regions)
 
-    # count scores for each region
-    for region in make_regions(grid):
-        # The total number of sides for the region is the combination of horizontal
-        # sides and vertical sides
-        sides_count: int = count_vertical_sides(region) + count_horizontal_sides(region)
-        total += sides_count * len(region)
 
-    return total
+def perimeter_length(region: set[Point]) -> int:
+    return sum(
+        1
+        for pos in region
+        for neighbor in orthogonal_neighborhood(pos)
+        if neighbor not in region
+    )
+
+
+def count_sides(region: set[Point]) -> int:
+    """Count sides for the given region"""
+    # The total number of sides for the region is the combination of horizontal
+    # sides and vertical sides
+    return count_vertical_sides(region) + count_horizontal_sides(region)
 
 
 def count_vertical_sides(region: set[Point]) -> int:
