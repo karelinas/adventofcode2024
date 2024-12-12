@@ -12,9 +12,12 @@ def main() -> None:
     print("Part 2:", discounted_price(grid))
 
 
+Region = set[Point]
+
+
 @dataclass
 class Grid:
-    regions: list[set[Point]]
+    regions: list[Region]
 
     @staticmethod
     def from_string(data: str) -> "Grid":
@@ -35,40 +38,40 @@ class Grid:
             if loc in plots:
                 # this region has already been mapped
                 continue
-            for coord in map_region(plants, plant, loc):
+            for coord in Grid.map_region(plants, loc):
                 plots[coord] = current_region_id
             current_region_id += 1
 
         # finally return the new regions
-        return Grid(regions=make_regions(plots))
+        return Grid(regions=Grid.make_regions(plots))
 
+    @staticmethod
+    def map_region(plants: dict[Point, str], start_plot: Point) -> list[Point]:
+        """List the points belonging to the given region"""
+        want_plant: str = plants[start_plot]
+        to_check: list[Point] = [start_plot]
+        seen: set[Point] = set(to_check)
 
-def map_region(
-    plants: dict[Point, str], want_plant: str, start_plot: Point
-) -> list[Point]:
-    to_check: list[Point] = [start_plot]
-    seen: set[Point] = set(to_check)
+        while to_check:
+            pos = to_check.pop()
+            seen.add(pos)
+            for neighbor in orthogonal_neighborhood(pos):
+                if (
+                    neighbor in seen
+                    or neighbor not in plants
+                    or plants[neighbor] != want_plant
+                ):
+                    continue
+                to_check.append(neighbor)
+        return list(seen)
 
-    while to_check:
-        pos = to_check.pop()
-        seen.add(pos)
-        for neighbor in orthogonal_neighborhood(pos):
-            if (
-                neighbor in seen
-                or neighbor not in plants
-                or plants[neighbor] != want_plant
-            ):
-                continue
-            to_check.append(neighbor)
-    return list(seen)
-
-
-def make_regions(plots: dict[Point, int]) -> list[set[Point]]:
-    """Group points by region"""
-    regions: dict[int, set[Point]] = defaultdict(set)
-    for pos, region in plots.items():
-        regions[region].add(pos)
-    return list(region for region in regions.values())
+    @staticmethod
+    def make_regions(plots: dict[Point, int]) -> list[Region]:
+        """Group points by region"""
+        regions: dict[int, Region] = defaultdict(set)
+        for pos, region in plots.items():
+            regions[region].add(pos)
+        return list(region for region in regions.values())
 
 
 def total_price(grid: Grid) -> int:
@@ -79,7 +82,7 @@ def discounted_price(grid: Grid) -> int:
     return sum(count_sides(region) * len(region) for region in grid.regions)
 
 
-def perimeter_length(region: set[Point]) -> int:
+def perimeter_length(region: Region) -> int:
     return sum(
         1
         for pos in region
@@ -88,14 +91,14 @@ def perimeter_length(region: set[Point]) -> int:
     )
 
 
-def count_sides(region: set[Point]) -> int:
+def count_sides(region: Region) -> int:
     """Count sides for the given region"""
     # The total number of sides for the region is the combination of horizontal
     # sides and vertical sides
     return count_vertical_sides(region) + count_horizontal_sides(region)
 
 
-def count_vertical_sides(region: set[Point]) -> int:
+def count_vertical_sides(region: Region) -> int:
     """Count vertical sides for the given region"""
     min_x = min(p.x for p in region)
     max_x = max(p.x for p in region)
@@ -114,20 +117,19 @@ def count_vertical_sides(region: set[Point]) -> int:
             vertical_sides.append(0)
             for y in range(min_y, max_y + 1):
                 pos = Point(x, y)
-                neighbor = pos + direction
-                vertical_sides.append(
-                    0 if pos not in region or neighbor in region else 1
-                )
+                neighbor: Point = pos + direction
+                has_edge: bool = pos in region and neighbor not in region
+                vertical_sides.append(1 if has_edge else 0)
         side_count += sum(drop_consecutive(vertical_sides))
 
     return side_count
 
 
-def count_horizontal_sides(region: set[Point]) -> int:
+def count_horizontal_sides(region: Region) -> int:
     """Count horizontal sides for the given region"""
     # Count horizontal sides by transposing the region and counting vertical sides
     # This is equivalent to just counting horizontal sides
-    transposed_region: set[Point] = set(transpose_points(region))
+    transposed_region: Region = set(transpose_points(region))
     return count_vertical_sides(transposed_region)
 
 
