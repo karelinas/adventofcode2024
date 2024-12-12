@@ -1,6 +1,7 @@
 from collections import defaultdict
 from dataclasses import dataclass
 from sys import stdin
+from typing import Iterable
 
 from lib import Point, orthogonal_neighborhood
 
@@ -23,13 +24,17 @@ class Grid:
 
     @staticmethod
     def from_string(data: str) -> "Grid":
+        # remove empty lines from input
         filtered_lines: list[str] = [line for line in data.strip().split("\n") if line]
 
+        # make a simple plant grid
         plants: dict[Point, str] = {
             Point(x, y): plant
             for y, line in enumerate(filtered_lines)
             for x, plant in enumerate(line.strip())
         }
+
+        # find regions and give each a unique ID
         regions: dict[Point, int] = dict()
         current_region_id: int = 0
         for loc, plant in plants.items():
@@ -39,6 +44,8 @@ class Grid:
             for coord in map_region(plants, plant, loc):
                 regions[coord] = current_region_id
             current_region_id += 1
+
+        # finally return the new grid with plants and regions
         return Grid(
             grid={
                 loc: Plot(plant=plant, region_id=regions[loc])
@@ -67,71 +74,78 @@ def map_region(
     return list(seen)
 
 
-def make_regions(grid: Grid) -> dict[int, set[Point]]:
+def make_regions(grid: Grid) -> list[set[Point]]:
+    """Group points by region"""
     regions: dict[int, set[Point]] = defaultdict(set)
     for pos, plot in grid.grid.items():
         regions[plot.region_id].add(pos)
-    return regions
+    return list(plots for plots in regions.values())
 
 
 def total_price(grid: Grid) -> int:
-    regions: dict[int, set[Point]] = make_regions(grid)
-    region_values: list[tuple[int, int]] = []
-    for plots in regions.values():
+    total: int = 0
+    for plots in make_regions(grid):
         region_area: int = len(plots)
         region_perimeter: int = sum(
-            (
-                1
-                if neighbor not in grid.grid
-                or grid.grid[neighbor].plant != grid.grid[plot].plant
-                else 0
-            )
+            1
             for plot in plots
             for neighbor in orthogonal_neighborhood(plot)
+            if neighbor not in grid.grid
+            or grid.grid[neighbor].plant != grid.grid[plot].plant
         )
-        region_values.append((region_area, region_perimeter))
-    return sum(area * perimeter for area, perimeter in region_values)
+        total += region_area * region_perimeter
+    return total
 
 
 def discounted_price(grid: Grid) -> int:
-    regions: dict[int, set[Point]] = make_regions(grid)
-    region_values: list[tuple[int, int]] = []
+    total: int = 0
 
-    for plots in regions.values():
+    # count scores for each region
+    for plots in make_regions(grid):
         min_x = min(p.x for p in plots)
         max_x = max(p.x for p in plots)
         min_y = min(p.y for p in plots)
         max_y = max(p.y for p in plots)
 
         sides_count: int = 0
-        # vertical sides
+        # count vertical sides
         for direction in [Point.east(), Point.west()]:
-            vertical_sides: list[str] = []
-            for x in range(min_x - 1, max_x + 2):
-                for y in range(min_y - 1, max_y + 2):
+            vertical_sides: list[int] = []
+            for x in range(min_x, max_x + 1):
+                vertical_sides.append(0)
+                for y in range(min_y, max_y + 1):
                     pos = Point(x, y)
-                    if pos not in plots:
-                        vertical_sides.append(".")
-                        continue
                     neighbor = pos + direction
-                    vertical_sides.append("." if neighbor in plots else "#")
-            sides_count += sum(1 for s in "".join(vertical_sides).split(".") if s)
-        # horizontal sides
+                    vertical_sides.append(
+                        0 if pos not in plots or neighbor in plots else 1
+                    )
+            sides_count += sum(drop_consecutive(vertical_sides))
+        # count horizontal sides
         for direction in [Point.north(), Point.south()]:
-            horizontal_sides: list[str] = []
-            for y in range(min_y - 1, max_y + 2):
-                for x in range(min_x - 1, max_x + 2):
+            horizontal_sides: list[int] = []
+            for y in range(min_y, max_y + 1):
+                horizontal_sides.append(0)
+                for x in range(min_x, max_x + 1):
                     pos = Point(x, y)
                     if pos not in plots:
-                        horizontal_sides.append(".")
+                        horizontal_sides.append(0)
                         continue
                     neighbor = pos + direction
-                    horizontal_sides.append("." if neighbor in plots else "#")
-            sides_count += sum(1 for s in "".join(horizontal_sides).split(".") if s)
+                    horizontal_sides.append(
+                        0 if pos not in plots or neighbor in plots else 1
+                    )
+            sides_count += sum(drop_consecutive(horizontal_sides))
+        total += sides_count * len(plots)
 
-        region_values.append((len(plots), sides_count))
+    return total
 
-    return sum(area * sides for area, sides in region_values)
+
+def drop_consecutive(it: Iterable[int]) -> Iterable[int]:
+    prev = None
+    for val in it:
+        if val != prev:
+            yield val
+            prev = val
 
 
 if __name__ == "__main__":
