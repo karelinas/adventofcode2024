@@ -48,9 +48,11 @@ def map_region(plants: dict[Point, str], start_plot: Point) -> set[Point]:
     while to_check:
         pos = to_check.pop()
         region.add(pos)
-        for neighbor in orthogonal_neighborhood(pos):
-            if neighbor not in region and plants.get(neighbor, None) == want_plant:
-                to_check.append(neighbor)
+        to_check.extend(
+            neighbor
+            for neighbor in orthogonal_neighborhood(pos)
+            if neighbor not in region and plants.get(neighbor, None) == want_plant
+        )
 
     return region
 
