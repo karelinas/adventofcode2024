@@ -1,85 +1,66 @@
-from collections import defaultdict
-from dataclasses import dataclass
 from sys import stdin
 from typing import Iterable
 
 from lib import Point, orthogonal_neighborhood
 
-
-def main() -> None:
-    grid = Grid.from_string(stdin.read())
-    print("Part 1:", total_price(grid))
-    print("Part 2:", discounted_price(grid))
-
-
 Region = set[Point]
 
 
-@dataclass
-class Grid:
-    regions: list[Region]
+def main() -> None:
+    regions: list[Region] = parse_regions(stdin.read())
+    print("Part 1:", total_price(regions))
+    print("Part 2:", discounted_price(regions))
 
-    @staticmethod
-    def from_string(data: str) -> "Grid":
-        # remove empty lines from input
-        filtered_lines: list[str] = [line for line in data.strip().split("\n") if line]
 
-        # make a simple plant grid
-        plants: dict[Point, str] = {
-            Point(x, y): plant
-            for y, line in enumerate(filtered_lines)
-            for x, plant in enumerate(line.strip())
-        }
+def parse_regions(data: str) -> list[Region]:
+    """Parse a grid and find all the regions in it"""
+    # remove empty lines from input
+    filtered_lines: list[str] = [line for line in data.strip().split("\n") if line]
 
-        # find regions and give each a unique ID
-        plots: dict[Point, int] = dict()
-        current_region_id: int = 0
-        for loc, plant in plants.items():
-            if loc in plots:
-                # this region has already been mapped
-                continue
-            for coord in Grid.map_region(plants, loc):
-                plots[coord] = current_region_id
-            current_region_id += 1
+    # make a simple plant grid
+    plants: dict[Point, str] = {
+        Point(x, y): plant
+        for y, line in enumerate(filtered_lines)
+        for x, plant in enumerate(line.strip())
+    }
 
-        # finally return the new regions
-        return Grid(regions=Grid.make_regions(plots))
+    # find regions in the grid
+    regions: list[Region] = []
+    used: set[Point] = set()
+    for loc in plants.keys():
+        if loc in used:
+            # this position has already been included in a region
+            continue
+        region: Region = map_region(plants, loc)
+        regions.append(region)
+        used.update(region)
 
-    @staticmethod
-    def map_region(plants: dict[Point, str], start_plot: Point) -> list[Point]:
-        """List the points belonging to the given region"""
-        want_plant: str = plants[start_plot]
-        to_check: list[Point] = [start_plot]
-        seen: set[Point] = set(to_check)
+    # finally return the new regions
+    return regions
 
-        while to_check:
-            pos = to_check.pop()
-            seen.add(pos)
-            for neighbor in orthogonal_neighborhood(pos):
-                if (
-                    neighbor in seen
-                    or neighbor not in plants
-                    or plants[neighbor] != want_plant
-                ):
-                    continue
+
+def map_region(plants: dict[Point, str], start_plot: Point) -> set[Point]:
+    """List the points belonging to the given region"""
+    want_plant: str = plants[start_plot]
+
+    to_check: list[Point] = [start_plot]
+    region: set[Point] = set(to_check)
+    while to_check:
+        pos = to_check.pop()
+        region.add(pos)
+        for neighbor in orthogonal_neighborhood(pos):
+            if neighbor not in region and plants.get(neighbor, None) == want_plant:
                 to_check.append(neighbor)
-        return list(seen)
 
-    @staticmethod
-    def make_regions(plots: dict[Point, int]) -> list[Region]:
-        """Group points by region"""
-        regions: dict[int, Region] = defaultdict(set)
-        for pos, region in plots.items():
-            regions[region].add(pos)
-        return list(region for region in regions.values())
+    return region
 
 
-def total_price(grid: Grid) -> int:
-    return sum(len(region) * perimeter_length(region) for region in grid.regions)
+def total_price(regions: list[Region]) -> int:
+    return sum(len(region) * perimeter_length(region) for region in regions)
 
 
-def discounted_price(grid: Grid) -> int:
-    return sum(count_sides(region) * len(region) for region in grid.regions)
+def discounted_price(regions: list[Region]) -> int:
+    return sum(count_sides(region) * len(region) for region in regions)
 
 
 def perimeter_length(region: Region) -> int:
