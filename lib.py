@@ -21,6 +21,9 @@ class Point:
     def __lt__(self, rhs: "Point") -> bool:
         return (self.x, self.y) < (rhs.x, rhs.y)
 
+    def as_tuple(self) -> tuple[int, int]:
+        return (self.x, self.y)
+
     def reverse(self) -> "Point":
         return Point(-self.x, -self.y)
 
