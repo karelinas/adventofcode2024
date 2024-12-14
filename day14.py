@@ -15,15 +15,14 @@ IMG_OUT_DIR: str = "out"
 
 def main() -> None:
     sim = Simulation.from_string(stdin.read())
-    sim2 = sim.copy()
 
-    print("Part 1:", safety_factor(sim.simulate(100)))
+    print("Part 1:", safety_factor(sim.copy().simulate(100)))
 
     print(f"Saving images to {IMG_OUT_DIR}. Press CTRL-C to stop.")
     if not os.path.isdir(IMG_OUT_DIR):
         os.mkdir(IMG_OUT_DIR)
     try:
-        sim2.find_christmas_tree()
+        sim.find_christmas_tree()
     except KeyboardInterrupt:
         print("Stopped.")
         print("Browse the generated images manually to find a christmas tree.")
