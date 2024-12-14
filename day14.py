@@ -19,12 +19,15 @@ def main() -> None:
 
     print("Part 1:", safety_factor(sim.simulate(100)))
 
-    print(f"Saving images to {IMG_OUT_DIR}. Interrupt with CTRL-C.")
-    print("Browse the generated images manually to find a christmas tree.")
-    print("The image filename is the puzzle answer for part 2.")
+    print(f"Saving images to {IMG_OUT_DIR}. Press CTRL-C to stop.")
     if not os.path.isdir(IMG_OUT_DIR):
         os.mkdir(IMG_OUT_DIR)
-    sim2.find_christmas_tree()
+    try:
+        sim2.find_christmas_tree()
+    except KeyboardInterrupt:
+        print("Stopped.")
+        print("Browse the generated images manually to find a christmas tree.")
+        print("The image filename is the puzzle answer for part 2.")
 
 
 @dataclass
