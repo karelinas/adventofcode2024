@@ -21,6 +21,9 @@ class Point:
     def __lt__(self, rhs: "Point") -> bool:
         return (self.x, self.y) < (rhs.x, rhs.y)
 
+    def __mod__(self, rhs: "Point") -> "Point":
+        return Point(self.x % rhs.x, self.y % rhs.y)
+
     def as_tuple(self) -> tuple[int, int]:
         return (self.x, self.y)
 
