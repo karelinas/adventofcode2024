@@ -1,6 +1,6 @@
 import unittest
 
-from day15 import Simulation, sum_of_gps_coordinates
+from day15 import Simulation, WideSimulation, sum_of_gps_coordinates
 
 SMALLER_EXAMPLE = """
 ########
@@ -40,15 +40,28 @@ v^^>>><<^^<>>^v^<v^vv<>v^<<>^<^v^v><^<<<><<^<v><v<>vv>>v><v^<vv<>v^<<^
 """.strip()
 
 
+PART2_SMALL_EXAMPLE = """
+#######
+#...#.#
+#.....#
+#..OO@#
+#..O..#
+#.....#
+#######
+
+<vv<<^^<<^^
+""".strip()
+
+
 class Day14TestCase(unittest.TestCase):
-    def test_smaller_example_data(self):
+    def test_smaller_example_part1(self):
         sim = Simulation.from_string(SMALLER_EXAMPLE)
+        self.assertEqual(sum_of_gps_coordinates(sim.simulate()), 2028)
 
-        with self.subTest("Part 1"):
-            self.assertEqual(sum_of_gps_coordinates(sim.simulate()), 2028)
-
-    def test_larger_example_data(self):
+    def test_larger_example_part1(self):
         sim = Simulation.from_string(LARGER_EXAMPLE)
+        self.assertEqual(sum_of_gps_coordinates(sim.simulate()), 10092)
 
-        with self.subTest("Part 1"):
-            self.assertEqual(sum_of_gps_coordinates(sim.simulate()), 10092)
+    def test_larger_example_part2(self):
+        sim = WideSimulation.from_string(LARGER_EXAMPLE)
+        self.assertEqual(sum_of_gps_coordinates(sim.simulate()), 9021)
