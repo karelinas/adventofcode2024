@@ -60,11 +60,20 @@ class Simulation:
     def simulate(self) -> "Simulation":
         for move in self.moves:
             next_pos: Point = self.robot + move
+
+            # Check if there's a wall in the way
             if self.has_wall(next_pos):
                 continue
-            if self.has_box(next_pos) and not self.move_boxes(next_pos, move):
+
+            # If there's a box in our way, try to push it
+            box: Optional[Point] = self.get_box_at(next_pos)
+            if box and not self.move_boxes(box, move):
+                # Pushing the box failed, can't move
                 continue
+
+            # We can move!
             self.robot = next_pos
+
         return self
 
     def has_wall(self, pos: Point) -> bool:
@@ -72,6 +81,10 @@ class Simulation:
 
     def has_box(self, pos: Point) -> bool:
         return pos in self.boxes
+
+    def get_box_at(self, pos: Point) -> Optional[Point]:
+        """Return the box at given position"""
+        return pos if pos in self.boxes else None
 
     def move_boxes(self, p: Point, v: Point) -> bool:
         next_pos = p + v
@@ -112,25 +125,6 @@ class WideSimulation(Simulation):
             robot=Point(sim.robot.x * 2, sim.robot.y),
             moves=sim.moves,
         )
-
-    def simulate(self) -> "WideSimulation":
-        for move in self.moves:
-            next_pos: Point = self.robot + move
-
-            # Check if there's a wall in the way
-            if self.has_wall(next_pos):
-                continue
-
-            # If there's a box in our way, try to push it
-            box: Optional[Point] = self.get_box_at(next_pos)
-            if box and not self.move_boxes(box, move):
-                # Pushing the box failed, can't move
-                continue
-
-            # We can move!
-            self.robot = next_pos
-
-        return self
 
     def get_box_at(self, pos: Point) -> Optional[Point]:
         """Return the box at given position, considering double-wide boxes"""
