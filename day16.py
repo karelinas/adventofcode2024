@@ -12,6 +12,7 @@ DEFAULT_HEADING = Point.east()
 def main() -> None:
     maze = Maze.from_string(stdin.read())
     print("Part 1:", best_score(maze))
+    print("Part 2:", best_path_tiles(maze))
 
 
 @dataclass
@@ -41,46 +42,128 @@ class Maze:
         return Maze(maze=maze, start=start, end=end)
 
 
+def best_score(maze: Maze) -> int:
+    costs = build_cost_matrix(maze)
+    return costs[maze.end]
+
+
+def best_path_tiles(maze: Maze) -> int:
+    costs = build_cost_matrix(maze)
+    path = find_alternative_paths(maze, costs)
+    return len(path)
+
+
 # cost, position, heading
 QueueItem = tuple[int, Point, Point]
-# position, heading
-CostKey = tuple[Point, Point]
 
 
-def best_score(maze: Maze) -> int:
+def build_cost_matrix(maze: Maze) -> dict[Point, int]:
+    """
+    Find the best path from start to end and return the resulting cost matrix.
+
+    It's just a dijktsra with some custom cost stuff.
+    """
+    start: Point = maze.start
+    end: Point = maze.end
+
+    # set up djikstra priority queue
     queue: list[QueueItem] = []
-    heappush(queue, (0, maze.start, DEFAULT_HEADING))
+    heappush(queue, (0, start, DEFAULT_HEADING))
 
-    path_costs: dict[CostKey, int] = defaultdict(lambda: 2**32)
-    seen: set[CostKey] = set()
+    # set up cost matrix
+    path_costs: dict[Point, int] = defaultdict(lambda: 2**32)
+    path_costs[start] = 0
+
+    # keep track of how we got to each node
+    prev: dict[Point, set[Point]] = defaultdict(set)
 
     while queue:
         cost, pos, heading = heappop(queue)
-
-        if pos == maze.end:
-            return int(cost)
-
-        if (pos, heading) in seen:
-            continue
-        seen.add((pos, heading))
+        if pos == end:
+            break
 
         for direction in orthogonal_directions():
+            if direction == heading.reverse():
+                # no backtracking
+                continue
+
             next_pos: Point = pos + direction
             if next_pos not in maze.maze:
+                # no wallhacks
                 continue
 
-            cost_to_move: int = 1
-            if direction != heading:
-                cost_to_move += 1000
-
+            cost_to_move: int = 1 if direction == heading else 1001
             cost_to_destination: int = cost + cost_to_move
-            if cost_to_destination >= path_costs[(next_pos, direction)]:
+            if cost_to_destination >= path_costs[next_pos]:
+                # we've already found a cheaper route to this tile
                 continue
 
-            path_costs[(next_pos, direction)] = cost_to_destination
+            prev[next_pos].add(pos)
+            path_costs[next_pos] = cost_to_destination
             heappush(queue, (cost_to_destination, next_pos, direction))
 
-    assert None, "Path not found"
+    assert end in prev, "Maze must be solvable"
+    return path_costs
+
+
+def find_alternative_paths(maze: Maze, old_costs: dict[Point, int]) -> set[Point]:
+    """
+    Finds all equally good alternative paths for a solved maze.
+
+    Also just a dijktsra with some custom cost stuff.
+    """
+    start: Point = maze.end
+    end: Point = maze.start
+
+    # set up djikstra priority queue
+    queue: list[QueueItem] = []
+    for direction in orthogonal_directions():
+        heappush(queue, (0, start, direction))
+
+    # set up cost matrix
+    path_costs: dict[Point, int] = defaultdict(lambda: 2**32)
+    path_costs[start] = 0
+
+    # keep track of how we got to each node
+    prev: dict[Point, set[Point]] = defaultdict(set)
+
+    while queue:
+        cost, pos, heading = heappop(queue)
+        if pos == end:
+            break
+
+        for direction in orthogonal_directions():
+            if direction == heading.reverse():
+                # no backtracking
+                continue
+
+            next_pos: Point = pos + direction
+            if next_pos not in maze.maze:
+                # no wallhacks
+                continue
+
+            cost_to_move: int = 1 if direction == heading else 1001
+            cost_to_destination: int = cost + cost_to_move
+            if cost_to_destination + old_costs[next_pos] > old_costs[start]:
+                # going to next_pos would be more expensive than the optimal route
+                continue
+
+            prev[next_pos].add(pos)
+            path_costs[next_pos] = cost_to_destination
+            heappush(queue, (cost_to_destination, next_pos, direction))
+
+    assert end in prev, "Maze must be solvable"
+    return make_paths(prev, end)
+
+
+def make_paths(prev: dict[Point, set[Point]], tgt: Point) -> set[Point]:
+    paths: set[Point] = set()
+    to_check: list[Point] = [tgt]
+    while to_check:
+        current = to_check.pop()
+        paths.add(current)
+        to_check.extend(prev[current])
+    return paths
 
 
 if __name__ == "__main__":
