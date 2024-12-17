@@ -15,5 +15,4 @@ class Day17TestCase(unittest.TestCase):
     def test_example_program(self):
         cpu = Cpu.from_string(EXAMPLE_PROGRAM)
         cpu.run()
-        with self.subTest("Part 1"):
-            self.assertEqual(cpu.stdout(), "4,6,3,5,6,3,5,2,1,0")
+        self.assertEqual(cpu.stdout(), "4,6,3,5,6,3,5,2,1,0")

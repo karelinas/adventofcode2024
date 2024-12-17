@@ -3,10 +3,11 @@ from sys import stdin
 
 
 def main() -> None:
-    cpu = Cpu.from_string(stdin.read())
-    print(cpu)
+    raw_input: str = stdin.read()
+    cpu = Cpu.from_string(raw_input)
     cpu.run()
     print("Part 1:", cpu.stdout())
+    print("Part 2:", find_a(cpu))
 
 
 REG_A: int = 4
@@ -70,6 +71,49 @@ class Cpu:
 
     def stdout(self) -> str:
         return ",".join(str(n) for n in self.outbuf)
+
+
+def find_a(cpu: Cpu) -> int:
+    a, _ = solve_next_a(cpu)
+    return a
+
+
+def solve_next_a(cpu: Cpu, a: int = 0) -> tuple[int, bool]:
+    """
+    Reverse engineering the source program for part 2 reveals that:
+    * The program is one big loop, jumping back to the beginning on the last
+      instruction
+    * REG_A is the only variable that affects the loop condition
+    * REG A's value is only manipulated by dividing by 8 on each iteration.
+    * Each iteration of the program takes exactly 3 bits from A and manipulates the
+      value in various ways in different registers, before printing out a number
+      based on those bits.
+
+    Because we can partition A so cleanly into independent chunks of 3 bits at a
+    time, we can solve it 3 bits at a time and get immediate feedback on if those
+    3 bits are plausible or not. This is significantly easier than guessing the
+    whole number at once.
+    """
+    for n in range(8):
+        candidate_a: int = (a << 3) | n
+        cpu.reg[REG_A] = candidate_a
+        cpu.reg[REG_B] = 0
+        cpu.reg[REG_C] = 0
+        cpu.outbuf = []
+        cpu.ip = 0
+        cpu.run()
+
+        if cpu.outbuf == cpu.program:
+            # Found the solution!
+            return candidate_a, True
+        elif cpu.program[-len(cpu.outbuf) :] == cpu.outbuf:
+            # Produced end of the program correctly, this value is promising
+            final_a, found = solve_next_a(cpu, candidate_a)
+            if found:
+                return final_a, True
+
+    # Ran out of things to try...
+    return 0, False
 
 
 if __name__ == "__main__":
