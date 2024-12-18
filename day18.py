@@ -17,22 +17,20 @@ def main() -> None:
 class Grid:
     incoming: list[Point]
     walls: set[Point]
-    previously_added: Point
     goal: Point = Point(70, 70)
 
     @staticmethod
     def from_string(data: str) -> "Grid":
         incoming: list[Point] = []
-        for line in reversed(data.strip().split("\n")):
+        for line in data.strip().split("\n"):
             x, y, *_ = line.split(",")
             incoming.append(Point(int(x), int(y)))
-        return Grid(incoming=incoming, walls=set(), previously_added=Point(0, 0))
+        return Grid(incoming=incoming, walls=set())
 
     def simulate(self, n: int = 1) -> "Grid":
-        for _ in range(n):
-            self.previously_added = self.incoming.pop()
-            self.walls.add(self.previously_added)
-        return self
+        return Grid(
+            incoming=self.incoming[n:], walls=set(self.incoming[:n]), goal=self.goal
+        )
 
     def in_bounds(self, p: Point) -> bool:
         return p.x >= 0 and p.x <= self.goal.x and p.y >= 0 and p.y <= self.goal.y
@@ -43,17 +41,19 @@ def shortest_path_length(grid: Grid) -> int:
 
 
 def first_blocking_coordinate(grid: Grid) -> Point:
-    path: set[Point] = set()
-    while grid.incoming:
-        grid.simulate()
-        if not path or grid.previously_added in path:
-            # only need to recalculate when previously found path was blocked by new
-            # wall
-            path = shortest_path(grid)
-            if grid.goal not in path:
-                return grid.previously_added
+    left: int = 0
+    right: int = len(grid.incoming)
+    mid: int = len(grid.incoming) // 2
+    while left <= right:
+        grid.walls = set(grid.incoming[:mid])
+        path = shortest_path(grid)
+        if grid.goal in path:
+            left = mid + 1
+        else:
+            right = mid - 1
+        mid = (right + left) // 2
 
-    raise Exception("No solution")
+    return grid.incoming[mid]
 
 
 # cost, position
