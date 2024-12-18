@@ -1,6 +1,6 @@
 import unittest
 
-from day18 import Grid, shortest_path_length
+from day18 import Grid, first_blocking_coordinate, shortest_path_length
 from lib import Point
 
 EXAMPLE_BYTES = """
@@ -36,4 +36,7 @@ class Day18TestCase(unittest.TestCase):
     def test_example(self):
         grid = Grid.from_string(EXAMPLE_BYTES)
         grid.goal = Point(6, 6)
-        self.assertEqual(shortest_path_length(grid.simulate(n=12)), 22)
+        with self.subTest("Part 1"):
+            self.assertEqual(shortest_path_length(grid.simulate(n=12)), 22)
+        with self.subTest("Part 2"):
+            self.assertEqual(first_blocking_coordinate(grid), Point(6, 1))
