@@ -1,13 +1,15 @@
 from dataclasses import dataclass
+from itertools import combinations
 from sys import stdin
 from typing import Optional
 
-from lib import Point, orthogonal_directions, orthogonal_neighborhood
+from lib import Point, manhattan_distance, orthogonal_neighborhood
 
 
 def main() -> None:
     grid = Grid.from_string(stdin.read())
-    print("Part 1:", count_good_cheats(grid))
+    print("Part 1:", count_good_2cheats(grid))
+    print("Part 2:", count_good_20cheats(grid))
 
 
 @dataclass
@@ -42,7 +44,7 @@ class Grid:
         return Grid(grid=grid, start=start, end=end)
 
 
-def count_good_cheats(grid: Grid, *, minimum_score: int = 100) -> int:
+def make_costs(grid: Grid) -> dict[Point, int]:
     # Build the path and costs to get to each point on the path
     cost: dict[Point, int] = {}
     distance: int = 0
@@ -58,25 +60,26 @@ def count_good_cheats(grid: Grid, *, minimum_score: int = 100) -> int:
             ),
             None,
         )
+    return cost
 
-    # Count shortcuts
-    shortcut_count: int = 0
-    for pos in grid.grid:
-        for d in orthogonal_directions():
-            if d in grid.grid:
-                # not a wall
-                continue
 
-            next_pos: Point = pos + (d * 2)
-            if next_pos not in grid.grid or cost[next_pos] < cost[pos]:
-                # not a shortcut
-                continue
+def count_good_ncheats(grid: Grid, *, n: int, minimum_score: int = 100) -> int:
+    cost: dict[Point, int] = make_costs(grid)
 
-            saves: int = cost[next_pos] - cost[pos] - 2
-            if saves >= minimum_score:
-                shortcut_count += 1
+    return sum(
+        1
+        for f, t in combinations(grid.grid, 2)
+        if manhattan_distance(f, t) <= n
+        and abs(cost[t] - cost[f]) - manhattan_distance(f, t) >= minimum_score
+    )
 
-    return shortcut_count
+
+def count_good_2cheats(grid: Grid, *, minimum_score: int = 100) -> int:
+    return count_good_ncheats(grid, n=2, minimum_score=minimum_score)
+
+
+def count_good_20cheats(grid: Grid, *, minimum_score: int = 100) -> int:
+    return count_good_ncheats(grid, n=20, minimum_score=minimum_score)
 
 
 if __name__ == "__main__":
